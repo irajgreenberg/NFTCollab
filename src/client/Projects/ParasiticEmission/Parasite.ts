@@ -3,10 +3,10 @@
 // Bacon Bits Cooperative
 // Dallas, TX
 
-import { BufferGeometry, CatmullRomCurve3, Color, Group, Line, LineBasicMaterial, Mesh, MeshPhongMaterial, RepeatWrapping, TextureLoader, Vector2, Vector3 } from "three";
+import { Box3, BufferGeometry, CatmullRomCurve3, Color, Group, Line, LineBasicMaterial, Mesh, MeshPhongMaterial, RepeatWrapping, TextureLoader, Vector2, Vector3 } from "three";
 import { randFloat } from "three/src/math/MathUtils";
-import { cos, FuncType, Particle, PI, sin, TWO_PI } from "../../../PByte3/IJGUtils";
-import { ProtoTubeGeometry } from "../../../PByte3/ProtoTubeGeometry";
+import { cos, FuncType, Particle, PI, sin, TWO_PI } from "../../PByte3/IJGUtils";
+import { ProtoTubeGeometry } from "../../PByte3/ProtoTubeGeometry";
 
 export class Parasite extends Group {
 
@@ -14,6 +14,10 @@ export class Parasite extends Group {
     ovaShellRadMin = 0;
     ovaShellRadMax = 0;
     ovaShellRadAmp = 0;
+
+
+    // box container
+    box: Box3 = new Box3(new Vector3(-200, -200, -200), new Vector3(200, 200, 200));
 
     curve: CatmullRomCurve3;
     // lineGeom: BufferGeometry;
@@ -55,19 +59,21 @@ export class Parasite extends Group {
         this.skin = skin;
         this.ovaShellRadAmp = randFloat(.3, 1.3);
 
+        let speedMax = 8.6;
+
         //let pts: Vector3[] = [];
         for (let i = 0; i < this.partCount; i++) {
             // let pos = new Vector3(randFloat(-8, 8), randFloat(-8, 8), randFloat(-8, 8));
             let pos = new Vector3(0, 0, 0);
             this.pts[i] = pos;
-            let spd = new Vector3(randFloat(-4.8, 4.8), randFloat(-4.8, 4.8), randFloat(-4.8, 4.8));
+            let spd = new Vector3(randFloat(-speedMax, speedMax), randFloat(-speedMax, speedMax), randFloat(-speedMax, speedMax));
             let g = Math.random() * 0xff;
             this.parts[i] = new Particle(pos, spd, 1, new Color(g, g, g));
             this.add(this.parts[i]);
 
             this.thetas[i] = i * PI / 180;
-            this.amps[i] = randFloat(1, 16);
-            this.frqs[i] = randFloat(PI / 70, PI / 60);
+            this.amps[i] = randFloat(1, 24);
+            this.frqs[i] = randFloat(PI / 40, PI / 30);
 
 
         }
@@ -88,37 +94,38 @@ export class Parasite extends Group {
         texture.repeat.set(this.partCount / 2, 1);
 
         let c = Math.random() * 0x777777;
-        let r = .7 + Math.random() * .3;
-        let g = .7 + Math.random() * .3;
-        let b = .7 + Math.random() * .3;
+        let r = .7 + Math.random() * .5;
+        let g = .7 + Math.random() * .5;
+        let b = .7 + Math.random() * .5;
         let colTube = new Color(r, g, b);
         this.protoTubeGeom = new ProtoTubeGeometry(this.curve, 5001, 24, true, { func: FuncType.SINUSOIDAL, min: 1, max: 5, periods: 500 });
-        let isWireFrame = (Math.round(Math.random() * 6) % 2 == 0) ? true : false;
-        isWireFrame = false;
+        let isWireFrame = (Math.round(Math.random() * 40) % 8 == 0) ? true : false;
+        let alpha = isWireFrame ? .1 : randFloat(.5, .9);
+        //isWireFrame = true;
         let protoMat = new MeshPhongMaterial({
             color: colTube,
-            specular: 0xDDDDDD + Math.random() * 0x333333,
-            reflectivity: .8,
-            shininess: randFloat(14, 25),
+            specular: 0xDDDDDD + Math.random() * 0xAAAAAA,
+            reflectivity: .1,
+            shininess: randFloat(24, 45),
             wireframe: isWireFrame,
             /*side: DoubleSide,*/
             map: texture,
             transparent: true,
-            opacity: .9,
+            opacity: alpha,
             bumpMap: isWireFrame ? null : texture,
-            bumpScale: randFloat(5, 19),
+            bumpScale: randFloat(5, 18),
 
         });
 
 
         this.protoTubeMesh = new Mesh(this.protoTubeGeom, protoMat);
         this.add(this.protoTubeMesh);
-        this.tubeRotationVals = new Vector3(randFloat(.007, .01), randFloat(-.007, -.01), randFloat(.007, .01));
+        this.tubeRotationVals = new Vector3(randFloat(.003, .05), randFloat(-.003, -.05), randFloat(.003, .05));
 
-        this.tubeMaxAmp = randFloat(70, 110);
+        this.tubeMaxAmp = randFloat(80, 145);
 
-        this.tubeMinFreq = randFloat(700, 2000);
-        this.tubeMaxFreq = randFloat(700, 2000);
+        this.tubeMinFreq = randFloat(400, 2000);
+        this.tubeMaxFreq = randFloat(400, 2000);
         this.tubePeriodsFreq = randFloat(100, 2000);
     }
 
@@ -130,9 +137,9 @@ export class Parasite extends Group {
             this.parts[i].pos.y = this.pts[i].y + cos(this.thetas[i]) * this.amps[i] + sin(-this.thetas[i]) * this.amps[i]
             //this.parts[i].pos.z = this.pts[i].z - cos(this.thetas[i]) * this.amps[i];
             this.parts[i].move();
-            if (this.parts[i].pos.length() >= this.ovaShellRadMin * 2) {
+            if (this.parts[i].pos.length() >= this.ovaShellRadMin + sin(time * PI / 30) * 1) {
                 this.parts[i].pos.normalize();
-                this.parts[i].pos.multiplyScalar(this.ovaShellRadMin * 2);
+                this.parts[i].pos.multiplyScalar(this.ovaShellRadMin + sin(time * PI / 30) * 1);
                 this.parts[i].spd.multiplyScalar(-1)
             }
             updatedPts[i] = this.parts[i].pos;
@@ -144,12 +151,12 @@ export class Parasite extends Group {
         this.curve = new CatmullRomCurve3(updatedPts);
         const points = this.curve.getPoints(this.partCount * 12);
 
-        this.tubeMin = 3 + Math.abs(cos(this.tubeMinTheta) * 5);
+        this.tubeMin = 1 + Math.abs(cos(this.tubeMinTheta) * 1);
         this.tubeMax = this.tubeMin + Math.abs(cos(this.tubeMaxTheta) * this.tubeMaxAmp);
         this.tubePeriods = 25 + Math.abs(cos(this.tubeMinTheta) * 0);
         // this.tubePeriods = 1;
 
-        this.protoTubeGeom = new ProtoTubeGeometry(this.curve, points.length, 10, false, { func: FuncType.SINUSOIDAL, min: this.tubeMin, max: this.tubeMax, periods: this.tubePeriods });
+        this.protoTubeGeom = new ProtoTubeGeometry(this.curve, points.length, 12, false, { func: FuncType.SINUSOIDAL, min: this.tubeMin, max: this.tubeMax, periods: this.tubePeriods });
         this.protoTubeMesh.geometry.dispose();
         this.protoTubeMesh.geometry = this.protoTubeGeom;
 

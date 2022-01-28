@@ -4,7 +4,7 @@
 // Dallas, TX
 
 import { Group, Vector3 } from "three";
-import { FuncType } from "../../../PByte3/IJGUtils";
+import { FuncType } from "../../PByte3/IJGUtils";
 import * as Tone from 'tone'
 
 export class ToneExperiment extends Group {

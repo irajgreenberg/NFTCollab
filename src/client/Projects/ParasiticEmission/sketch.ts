@@ -8,7 +8,7 @@
 import { AmbientLight, Color, DirectionalLight, HemisphereLight, PCFSoftShadowMap, PerspectiveCamera, PointLight, Scene, SpotLight, WebGLRenderer } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { randFloat } from 'three/src/math/MathUtils';
-import { PI, sin } from '../../../PByte3/IJGUtils';
+import { PI, sin } from '../../PByte3/IJGUtils';
 import { ParasiticEmission } from './ParasiticEmission';
 
 // create and position camera
